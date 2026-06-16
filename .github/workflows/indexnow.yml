@@ -1,0 +1,45 @@
+name: 색인 즉시 통보 (IndexNow + Google)
+
+# 글을 올리거나 콘텐츠가 바뀌어 main(운영 배포 브랜치)에 푸시되면
+# 빙·네이버(IndexNow)와 구글(Indexing API, 선택)에 즉시 색인을 통보한다.
+# 운영 배포 브랜치가 main이 아니면 아래 branches 값을 바꾸세요.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "content/**"
+      - "build.py"
+      - "anseong/**"
+      - "index.html"
+      - "*/index.html"
+  workflow_dispatch: {}   # 수동 실행도 허용
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    env:
+      GOOGLE_INDEXING_CREDENTIALS: ${{ secrets.GOOGLE_INDEXING_CREDENTIALS }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: 사이트맵 갱신(빌드)
+        run: python3 build.py
+
+      - name: 배포 전파 대기
+        run: sleep 90   # Cloudflare Pages 배포가 끝나 키 파일이 응답하도록 잠깐 대기
+
+      - name: IndexNow 통보 (빙·네이버)
+        run: python3 scripts/indexnow.py
+
+      - name: 구글 Indexing API 통보 (서비스 계정 시크릿이 있을 때만)
+        if: ${{ env.GOOGLE_INDEXING_CREDENTIALS != '' }}
+        run: |
+          python3 -m pip install --quiet google-auth
+          printf '%s' "$GOOGLE_INDEXING_CREDENTIALS" > "$RUNNER_TEMP/gsa.json"
+          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/gsa.json"
+          python3 scripts/google_index.py

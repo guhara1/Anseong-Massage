@@ -21,8 +21,14 @@ content/
   landmarks.py      # 생활권·교통거점 9개 (터미널·택지·대학·IC)
   info.py           # 예약 안내·이용 전 확인사항·홈타이 가이드·고객센터·개인정보 처리방침
 assets/             # CSS, 모바일 내비 JS, 파비콘, OG 이미지
-scripts/gen_thumbs.py  # 페이지별 og:image(검색 썸네일) 생성기 (Pillow)
+scripts/
+  gen_thumbs.py     # 페이지별 og:image(검색 썸네일) 생성기 (Pillow)
+  indexnow.py       # IndexNow 즉시 색인 통보 (빙·네이버)
+  google_index.py   # 구글 Indexing API 통보
+.github/workflows/indexnow.yml  # 푸시 시 자동 색인 통보
 ```
+
+빌드 산출물: `index.html`(각 디렉터리), `sitemap.xml`, `rss.xml`, `robots.txt`, `{INDEXNOW_KEY}.txt`
 
 ## 페이지 구성 (총 28개)
 
@@ -77,8 +83,52 @@ python3 build.py
 - 실제 오프라인 매장 주소가 없으므로 **LocalBusiness 대신 Organization Schema** 사용
 - 모든 페이지 본문은 페이지별 고유 작성 (지역명만 바꾼 복붙 없음)
 
+## 색인 (검색엔진 즉시 등록)
+
+빌드 시 다음 색인 자산이 함께 생성됩니다 (배포 도메인: `https://anseong-massage.pages.dev`).
+
+| 파일 | 용도 |
+|------|------|
+| `sitemap.xml` | 색인 허용 27개 URL + `lastmod`/`changefreq`/`priority` |
+| `rss.xml` | RSS 2.0 피드 (피드 발견·구독, 모든 페이지 `<link rel="alternate">`로 연결) |
+| `robots.txt` | Googlebot·Yeti(네이버)·bingbot·Daum 명시 허용 + 사이트맵 2종 안내 |
+| `{INDEXNOW_KEY}.txt` | IndexNow 키 검증 파일 (루트 평문) |
+
+### 1) 검색엔진 콘솔 등록 (최초 1회)
+- **구글 Search Console**: 도메인 등록 → `sitemap.xml` 제출
+- **네이버 서치어드바이저**: 사이트 소유확인(메인페이지 메타태그 적용됨) → `sitemap.xml`·`rss.xml` 제출
+- **빙 Webmaster Tools**: 사이트 등록 → `sitemap.xml` 제출
+
+### 2) IndexNow — 빙·네이버 즉시 통보
+IndexNow는 한 번 보내면 참여 검색엔진(**빙·네이버**·Yandex·Seznam 등)에 공유됩니다.
+글을 올리거나 수정한 뒤:
+```bash
+python3 scripts/indexnow.py                 # 전체 색인 URL 통보
+python3 scripts/indexnow.py <URL> [URL ...] # 변경된 글만 통보
+```
+키 파일(`{INDEXNOW_KEY}.txt`)이 도메인에 배포되어 있어야 검증을 통과합니다.
+
+### 3) 구글 Indexing API — 구글 즉시 통보 (선택)
+구글은 IndexNow에 참여하지 않으므로 별도 통보합니다. 서비스 계정 JSON을
+Search Console에 '소유자'로 추가한 뒤:
+```bash
+pip install google-auth
+export GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json
+python3 scripts/google_index.py             # 또는 변경 URL만 인자로
+```
+
+### 4) 자동화 — 푸시할 때마다 자동 통보
+`.github/workflows/indexnow.yml`이 운영 브랜치(`main`)에 콘텐츠가 푸시되면
+빌드 후 IndexNow(빙·네이버)에 자동 통보합니다. 구글 Indexing API는 저장소
+시크릿 `GOOGLE_INDEXING_CREDENTIALS`(서비스 계정 JSON 전체)를 넣으면 함께 동작합니다.
+> 운영 배포 브랜치가 `main`이 아니면 워크플로의 `branches` 값을 바꾸세요.
+
+> 참고: 구글·빙의 옛 `ping?sitemap=` 방식은 2023년에 폐지되었습니다.
+> 현재 빠른 색인 경로는 **IndexNow(빙·네이버) + 구글 Indexing API + Search Console 사이트맵**입니다.
+
 ## 배포 전 해야 할 일
 
-1. `content/site.py`의 `BASE_URL`을 실제 도메인으로 변경
-2. `python3 build.py` 재실행 (canonical·sitemap·robots.txt에 반영됨)
-3. Google Search Console / 네이버 서치어드바이저에 `sitemap.xml` 제출
+1. `content/site.py`의 `BASE_URL` 확인 (현재 `https://anseong-massage.pages.dev`)
+2. `python3 build.py` 재실행 (canonical·sitemap·rss·robots·IndexNow 키에 반영됨)
+3. Google Search Console / 네이버 서치어드바이저 / 빙에 `sitemap.xml` 제출
+4. 새 글/수정 시 `scripts/indexnow.py`(+선택 `scripts/google_index.py`) 실행, 또는 자동화 워크플로 사용
