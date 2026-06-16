@@ -1,6 +1,9 @@
 # 메인 페이지 — 안성시 전체 허브. 모든 키워드를 밀어 넣지 않고 하위 페이지로 연결한다.
 from .site import BASE_URL, BRAND, PHONE, PHONE_DISPLAY
 
+# 네이버 서치어드바이저 사이트 소유확인 메타 태그 (메인페이지 전용).
+_NAVER_VERIFY = '<meta name="naver-site-verification" content="cedcf887a4c31a4e24413dabc08705af79b76cf5">\n'
+
 # 실제 오프라인 매장 주소가 없으므로 LocalBusiness 대신 Organization 을 사용한다.
 _JSONLD = f"""<script type="application/ld+json">
 {{
@@ -196,7 +199,7 @@ PAGE = {
     "desc": "안성 출장마사지·홈타이 예약 전 읍면동, 생활권, 이용 기준을 정리했습니다.",
     "h1": "안성 출장마사지 · 안성시 홈타이 지역별 예약 안내",
     "body": _BODY,
-    "extra_head": _JSONLD,
+    "extra_head": _NAVER_VERIFY + _JSONLD,
     "breadcrumb": [],
     "hero": _HERO,
 }
