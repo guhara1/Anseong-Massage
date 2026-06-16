@@ -1,0 +1,202 @@
+# 메인 페이지 — 안성시 전체 허브. 모든 키워드를 밀어 넣지 않고 하위 페이지로 연결한다.
+from .site import BASE_URL, BRAND, PHONE, PHONE_DISPLAY
+
+# 실제 오프라인 매장 주소가 없으므로 LocalBusiness 대신 Organization 을 사용한다.
+_JSONLD = f"""<script type="application/ld+json">
+{{
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "name": "안성 출장마사지·홈타이 지역별 예약 안내",
+  "url": "{BASE_URL}/",
+  "description": "안성 출장마사지·홈타이 예약 전 읍면동, 생활권, 이용 기준을 정리한 안내 페이지",
+  "inLanguage": "ko-KR",
+  "isPartOf": {{ "@type": "WebSite", "name": "{BRAND}", "url": "{BASE_URL}/" }}
+}}
+</script>
+<script type="application/ld+json">
+{{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {{ "@type": "ListItem", "position": 1, "name": "안성 출장마사지·홈타이", "item": "{BASE_URL}/" }}
+  ]
+}}
+</script>
+<script type="application/ld+json">
+{{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "{BRAND}",
+  "url": "{BASE_URL}/",
+  "image": "{BASE_URL}/assets/og-image.png",
+  "telephone": "{PHONE}",
+  "description": "경기도 안성시 전지역 방문 출장마사지·홈타이 예약 안내",
+  "areaServed": {{ "@type": "AdministrativeArea", "name": "경기도 안성시" }},
+  "contactPoint": {{
+    "@type": "ContactPoint",
+    "telephone": "{PHONE}",
+    "contactType": "reservations",
+    "areaServed": "KR",
+    "availableLanguage": "Korean"
+  }}
+}}
+</script>
+<script type="application/ld+json">
+{{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {{
+      "@type": "Question",
+      "name": "안성시 전지역 방문이 가능한가요?",
+      "acceptedAnswer": {{ "@type": "Answer", "text": "예약 시간, 정확한 위치, 배정 상황에 따라 가능 여부가 달라집니다. 공도읍, 안성동, 대덕면을 비롯한 읍·면·대표 동 기준으로 안내하며 외곽 면 지역은 차량 이동 시간과 추가 이동비 여부를 예약 시 함께 확인합니다." }}
+    }},
+    {{
+      "@type": "Question",
+      "name": "안성에는 지하철역이 없는데 어떻게 위치를 찾나요?",
+      "acceptedAnswer": {{ "@type": "Answer", "text": "안성시는 운영 중인 철도역 중심 도시가 아니라 읍·면·대표 동과 안성터미널, 공도 생활권, 아양지구, 안성IC 같은 실제 생활권·교통거점을 기준으로 안내합니다. 정확한 가능 여부는 예약 시 주소 기준으로 확인합니다." }}
+    }},
+    {{
+      "@type": "Question",
+      "name": "안성1·2·3동은 왜 따로 없나요?",
+      "acceptedAnswer": {{ "@type": "Answer", "text": "번호로 나뉜 행정동은 안성동 대표 페이지에서 통합 안내하여 중복 페이지 위험을 줄입니다. 본문에서 중앙로·석정동·아양지구 등 중심 생활권을 함께 설명합니다." }}
+    }},
+    {{
+      "@type": "Question",
+      "name": "외곽 면 지역도 방문 가능한가요?",
+      "acceptedAnswer": {{ "@type": "Answer", "text": "일죽면·죽산면 같은 외곽 면 지역도 위치에 따라 가능할 수 있습니다. 다만 중심부와 이동 시간이 다를 수 있어 방문 가능 시간과 추가 이동비를 예약 시 미리 안내해 드립니다." }}
+    }},
+    {{
+      "@type": "Question",
+      "name": "홈타이와 출장마사지는 무엇이 다른가요?",
+      "acceptedAnswer": {{ "@type": "Answer", "text": "출장마사지는 관리사가 자택·숙소·사무실로 방문하는 형태 전체를 가리키고, 홈타이는 그중 집에서 받는 타이마사지를 부르는 말입니다. 자세한 내용은 홈타이 이용 가이드에서 확인하세요." }}
+    }}
+  ]
+}}
+</script>
+"""
+
+_HERO = f"""<section class="hero">
+  <div class="hero-inner">
+    <p class="hero-badge">Premium Visiting Spa · 경기도 안성시 전지역</p>
+    <h1>안성 출장마사지 · 안성시 홈타이<br>지역별 예약 안내</h1>
+    <p class="hero-lead">샵까지 갈 필요 없이, 계신 곳에서 받는 방문 관리.<br>자택·오피스텔·숙소 어디든 전화 한 통이면 예약이 끝납니다.</p>
+    <div class="hero-actions">
+      <a class="hero-btn primary" href="tel:{PHONE}">📞 {PHONE_DISPLAY}</a>
+      <a class="hero-btn" href="/reservation/">예약 안내 보기</a>
+    </div>
+    <ul class="hero-stats">
+      <li><strong>13곳</strong><span>읍·면·대표 동</span></li>
+      <li><strong>9곳</strong><span>생활권·교통거점</span></li>
+      <li><strong>안성시</strong><span>전지역 방문</span></li>
+      <li><strong>24시간</strong><span>예약 상담</span></li>
+    </ul>
+  </div>
+</section>
+"""
+
+_BODY = f"""
+<p class="lead">안성 출장마사지와 홈타이 예약을 찾는 분들을 위해 방문 가능 지역, 예약 절차, 이용 전 확인사항을 한곳에 정리했습니다. 이 페이지는 안성시 전체 구조를 설명하는 허브 역할을 하며, 자세한 내용은 읍·면·대표 동별·생활권별 안내에서 확인하실 수 있습니다.</p>
+
+<section id="why">
+<h2>안성시에서 출장마사지를 찾는 이유</h2>
+<p>안성 출장마사지를 찾는 분들은 대부분 현재 위치에서 가까운 방문 가능 지역을 먼저 확인합니다. 안성시는 공도읍, 안성동, 대덕면, 원곡면, 죽산면처럼 생활권이 넓게 퍼져 있는 지역으로, 서울이나 수원처럼 지하철역 중심으로 움직이는 도시가 아니라 자가용 이동과 버스, 터미널, IC 접근성이 중요한 도시입니다. 그래서 사이트 구조도 역세권보다 읍·면·대표 동과 생활권 중심으로 만드는 것이 자연스럽습니다. 간다GO는 안성시 전지역을 대상으로 자택, 오피스텔, 숙소 어디든 관리사가 직접 방문하며, 샵을 오가는 이동 없이 계신 곳에서 바로 관리받고 그대로 쉴 수 있다는 점이 가장 큰 장점입니다.</p>
+</section>
+
+<section id="hometai">
+<h2>안성 홈타이 이용 전 확인할 사항</h2>
+<p>안성 홈타이는 자택, 숙소, 사무실 인근에서 예약 가능 여부를 먼저 확인한 뒤 이용하는 방문형 관리 서비스입니다. 홈타이는 집에서 받는 타이마사지를 가리키는 말로, 오일을 쓰지 않고 편한 옷차림으로 받는 지압·스트레칭 구성이라 샤워 부담이 적어 처음 이용하는 분도 시작하기 좋습니다. 출장마사지와 홈타이는 형태가 조금 다를 뿐 예약 절차와 이용 기준은 같으므로, 어느 쪽을 원하시든 위치와 희망 시간만 알려주시면 됩니다. 진행 방식과 추천 대상, 받기 전 건강 확인 사항은 <a href="/hometai/">홈타이 이용 가이드</a>에서 자세히 정리했습니다.</p>
+</section>
+
+<section id="areas">
+<h2>읍·면·대표 동별 방문 가능 지역 안내</h2>
+<p>안성시는 행정구가 없으므로 안성시 → 읍·면·대표 동 → 생활권·교통거점 순서로 안내합니다. 공도읍과 11개 면, 그리고 안성1·2·3동을 통합한 <a href="/anseong/anseong-dong-chuljangmassage/">안성동</a>까지 13개 대표 지역으로 구성했습니다. 번호로 나뉜 안성1·2·3동을 각각 따로 만들면 지역명만 다르고 본문이 비슷해질 수 있어 안성동 한 페이지로 통합하고, 본문 안에서 중앙로·석정동·아양지구 등 중심 생활권을 설명합니다. 거주하시거나 머무시는 지역을 선택해 주세요.</p>
+<ul class="card-grid">
+<li><a href="/anseong/gongdo-eup-chuljangmassage/">공도읍</a></li>
+<li><a href="/anseong/bogae-myeon-chuljangmassage/">보개면</a></li>
+<li><a href="/anseong/geumgwang-myeon-chuljangmassage/">금광면</a></li>
+<li><a href="/anseong/seoun-myeon-chuljangmassage/">서운면</a></li>
+<li><a href="/anseong/miyang-myeon-chuljangmassage/">미양면</a></li>
+<li><a href="/anseong/daedeok-myeon-chuljangmassage/">대덕면</a></li>
+<li><a href="/anseong/yangseong-myeon-chuljangmassage/">양성면</a></li>
+<li><a href="/anseong/wongok-myeon-chuljangmassage/">원곡면</a></li>
+<li><a href="/anseong/iljuk-myeon-chuljangmassage/">일죽면</a></li>
+<li><a href="/anseong/juksan-myeon-chuljangmassage/">죽산면</a></li>
+<li><a href="/anseong/samjuk-myeon-chuljangmassage/">삼죽면</a></li>
+<li><a href="/anseong/gosam-myeon-chuljangmassage/">고삼면</a></li>
+<li><a href="/anseong/anseong-dong-chuljangmassage/">안성동</a></li>
+</ul>
+</section>
+
+<section id="landmarks">
+<h2>안성터미널·공도·아양지구 생활권 안내</h2>
+<p>역이 아닌 실제 이동 기준으로 위치를 설명하는 것이 편하시다면 생활권·교통거점 안내를 참고하세요. <a href="/anseong/anseong-terminal-chuljangmassage/">안성터미널</a>은 안성동 중심 생활권의 거점이고, <a href="/anseong/gongdo-area-chuljangmassage/">공도 생활권</a>은 평택과 가까운 안성 서부 주거·상업권, <a href="/anseong/ayang-area-chuljangmassage/">아양지구</a>는 신주거지와 상업시설이 함께 있는 안성 신도심입니다. 안성IC·서안성IC·일죽IC 인근은 차량 이동 기준이 분명한 거점으로, 외곽 이동 동선을 설명하는 데 활용합니다.</p>
+<ul class="card-grid">
+<li><a href="/anseong/anseong-terminal-chuljangmassage/">안성터미널</a></li>
+<li><a href="/anseong/gongdo-area-chuljangmassage/">공도 생활권</a></li>
+<li><a href="/anseong/ayang-area-chuljangmassage/">아양지구</a></li>
+<li><a href="/anseong/seokjeong-dong-area-chuljangmassage/">석정동 생활권</a></li>
+<li><a href="/anseong/chungang-univ-area-chuljangmassage/">중앙대 안성캠퍼스 인근</a></li>
+<li><a href="/anseong/hankyong-univ-area-chuljangmassage/">한경국립대 인근</a></li>
+<li><a href="/anseong/anseong-ic-chuljangmassage/">안성IC 인근</a></li>
+<li><a href="/anseong/west-anseong-ic-chuljangmassage/">서안성IC 인근</a></li>
+<li><a href="/anseong/iljuk-ic-chuljangmassage/">일죽IC 인근</a></li>
+</ul>
+</section>
+
+<section id="nostation">
+<h2>철도역이 없는 안성시 SEO 구성 방식</h2>
+<p>안성은 현재 운영 중인 철도역 중심의 도시가 아니기 때문에 지하철역별 페이지를 억지로 만들지 않습니다. 과거 안성역은 폐역 성격이 강하고, 평택부발선 안성역이나 수도권내륙선·경강선 연장처럼 향후 거론되는 철도 계획을 키워드로 단독 페이지를 만들면 실제 이용자에게 혼란을 줄 수 있습니다. 그래서 개통 전 예정역은 단독 색인 페이지로 만들지 않고 본문 보조 설명으로만 다룹니다. 대신 안성터미널, 공도 생활권, 아양지구, 중앙대 안성캠퍼스 인근, 한경국립대 인근, 안성IC 인근처럼 실제 생활권과 이동 기준이 분명한 거점을 중심으로 구성하는 것이 안전합니다.</p>
+</section>
+
+<section id="check">
+<h2>예약 전 꼭 확인해야 할 기준</h2>
+<p>예약 전에는 방문 가능 지역, 관리 가능 시간, 추가 이동비 여부, 결제 방식, 취소 기준, 서비스 범위를 먼저 확인하시는 것이 좋습니다. 안성시는 도시 면적이 넓고 읍·면 지역 비중이 커서 <a href="/anseong/gongdo-eup-chuljangmassage/">공도읍</a>, 안성동, <a href="/anseong/daedeok-myeon-chuljangmassage/">대덕면</a>, 죽산면, 일죽면의 이동 시간이 서로 다를 수 있습니다. 특히 외곽 면 지역은 차량 이동 기준이 중요하므로 방문 가능 범위와 추가 비용 여부를 분명히 확인해야 합니다. 결제와 변경·취소 기준 등 자세한 내용은 <a href="/reservation/">예약 안내</a>에서, 준비물과 위생·안전 기준은 <a href="/guide/">이용 전 확인사항</a>에서 확인하실 수 있습니다.</p>
+</section>
+
+<section id="guide">
+<h2>안성 출장마사지 사이트 이용 가이드</h2>
+<p>이 사이트는 메인 페이지가 안성시 전체 안내를 맡고, 읍·면·대표 동 페이지가 세부 지역 안내를, 생활권·교통거점 페이지가 실제 이동 기준이 있는 검색 의도를 각각 담당하도록 구성했습니다. 본인에게 익숙한 기준이 동·면이라면 읍·면·대표 동 페이지를, 터미널이나 IC·대학이라면 생활권·교통거점 페이지를 보시면 되며 예약 절차와 이용 기준은 어느 쪽이든 동일합니다. 모든 안내는 과장 없이 방문 가능 지역, 예약 절차, 취소 기준, 개인정보 처리 기준을 분명히 보여 드리는 것을 원칙으로 하며, 불법적이거나 무리한 요청은 어떤 경우에도 진행하지 않습니다.</p>
+</section>
+
+<section id="faq">
+<h2>자주 묻는 질문</h2>
+<div class="faq-item">
+<h3>안성시 전지역 방문이 가능한가요?</h3>
+<p>예약 시간, 정확한 위치, 배정 상황에 따라 가능 여부가 달라집니다. 공도읍, 안성동, 대덕면을 비롯한 읍·면·대표 동 기준으로 안내하며 외곽 면 지역은 차량 이동 시간과 추가 이동비 여부를 예약 시 함께 확인합니다.</p>
+</div>
+<div class="faq-item">
+<h3>안성에는 지하철역이 없는데 어떻게 위치를 찾나요?</h3>
+<p>안성시는 운영 중인 철도역 중심 도시가 아니라 읍·면·대표 동과 안성터미널, 공도 생활권, 아양지구, 안성IC 같은 실제 생활권·교통거점을 기준으로 안내합니다. 정확한 가능 여부는 예약 시 주소 기준으로 확인합니다.</p>
+</div>
+<div class="faq-item">
+<h3>안성1·2·3동은 왜 따로 없나요?</h3>
+<p>번호로 나뉜 행정동은 안성동 대표 페이지에서 통합 안내하여 중복 페이지 위험을 줄입니다. 본문에서 중앙로·석정동·아양지구 등 중심 생활권을 함께 설명하므로 행정동 번호를 모르셔도 됩니다.</p>
+</div>
+<div class="faq-item">
+<h3>외곽 면 지역도 당일 예약이 되나요?</h3>
+<p>일죽면·죽산면 같은 외곽 면 지역도 위치에 따라 가능할 수 있지만, 중심부와 이동 시간이 다를 수 있어 사전 예약을 권장합니다. 방문 가능 시간과 추가 이동비는 예약 시 미리 안내해 드립니다.</p>
+</div>
+<div class="faq-item">
+<h3>홈타이와 출장마사지는 무엇이 다른가요?</h3>
+<p>출장마사지는 관리사가 방문하는 형태 전체를, 홈타이는 그중 집에서 받는 타이마사지를 부르는 말입니다. 자세한 내용은 <a href="/hometai/">홈타이 이용 가이드</a>에서 확인하세요.</p>
+</div>
+</section>
+
+<section id="contact" class="cta">
+<h2>예약문의</h2>
+<p>안성시 방문 관리 예약과 상담은 전화로 가장 빠르게 진행됩니다. 위치와 희망 시간을 알려주시면 가능 여부를 바로 확인해 드립니다.</p>
+<a class="cta-phone" href="tel:{PHONE}">{PHONE_DISPLAY}</a>
+</section>
+"""
+
+PAGE = {
+    "path": "",
+    "title": "안성 출장마사지｜안성시 홈타이 지역별 예약 안내",
+    "desc": "안성 출장마사지·홈타이 예약 전 읍면동, 생활권, 이용 기준을 정리했습니다.",
+    "h1": "안성 출장마사지 · 안성시 홈타이 지역별 예약 안내",
+    "body": _BODY,
+    "extra_head": _JSONLD,
+    "breadcrumb": [],
+    "hero": _HERO,
+}
