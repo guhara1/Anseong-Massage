@@ -31,7 +31,7 @@ jobs:
         run: python3 build.py
 
       - name: 배포 전파 대기
-        run: sleep 90   # Cloudflare Pages 배포가 끝나 키 파일이 응답하도록 잠깐 대기
+        run: sleep 90   # Netlify 배포가 끝나 키 파일·새 URL이 응답하도록 잠깐 대기
 
       - name: IndexNow 통보 (빙·네이버)
         run: python3 scripts/indexnow.py

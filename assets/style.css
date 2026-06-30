@@ -668,3 +668,44 @@ th { background: var(--panel-2); color: var(--gold-soft); font-family: var(--ser
   .page-content section { padding: 26px 22px 22px; border-radius: 14px; }
   .cta { padding: 36px 20px; }
 }
+
+/* ── 상황별·주제별 롱테일 링크 그리드 ───────────────────────── */
+.topic-grid {
+  display: grid; gap: 10px; margin: 18px 0 4px; list-style: none; margin-left: 0;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+}
+.topic-grid li { margin: 0; }
+.topic-grid a {
+  display: block; padding: 14px 16px;
+  background: var(--panel-2); border: 1px solid var(--line);
+  border-left: 3px solid var(--line-gold);
+  border-radius: 10px; color: var(--text); font-size: 0.93rem;
+  transition: 0.18s;
+}
+.topic-grid a:hover {
+  border-color: var(--gold); border-left-color: var(--gold);
+  color: var(--gold-soft); transform: translateX(3px);
+  background: linear-gradient(90deg, #13203a, var(--panel-2));
+}
+
+/* ── 인근 지역 추천 내부링크 ─────────────────────────────────── */
+.related-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+.related-links { color: var(--text-dim); margin-top: 16px; }
+
+/* ── 이용 후기 ───────────────────────────────────────────────── */
+.reviews-summary { color: var(--text-dim); margin-bottom: 6px; }
+.reviews-summary strong { color: var(--gold-soft); }
+.review-list { display: grid; gap: 14px; margin: 18px 0 6px; }
+.review-card {
+  background: var(--panel-2); border: 1px solid var(--line);
+  border-radius: 12px; padding: 18px 20px;
+}
+.review-head {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.review-stars { color: var(--gold); letter-spacing: 0.12em; font-size: 0.98rem; }
+.review-author { color: var(--gold-soft); font-weight: 700; font-size: 0.92rem; }
+.review-date { color: var(--text-dim); font-size: 0.8rem; margin-left: auto; }
+.review-body { margin: 0; color: var(--text); line-height: 1.8; }
+.reviews-note { color: var(--text-dim); font-size: 0.82rem; margin-top: 14px; }

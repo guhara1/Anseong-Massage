@@ -2,82 +2,13 @@
 from .site import BASE_URL, BRAND, PHONE, PHONE_DISPLAY
 
 # 네이버 서치어드바이저 사이트 소유확인 메타 태그 (메인페이지 전용).
-_NAVER_VERIFY = '<meta name="naver-site-verification" content="cedcf887a4c31a4e24413dabc08705af79b76cf5">\n'
+# 도메인 변경(→ netlify.app)에 따라 재발급받은 소유확인 코드.
+_NAVER_VERIFY = '<meta name="naver-site-verification" content="ac2019445b51678bb3b5b4a56ab18c780bb1646f">\n'
 
-# 실제 오프라인 매장 주소가 없으므로 LocalBusiness 대신 Organization 을 사용한다.
-_JSONLD = f"""<script type="application/ld+json">
-{{
-  "@context": "https://schema.org",
-  "@type": "WebPage",
-  "name": "안성 출장마사지·홈타이 지역별 예약 안내",
-  "url": "{BASE_URL}/",
-  "description": "안성 출장마사지·홈타이 예약 전 읍면동, 생활권, 이용 기준을 정리한 안내 페이지",
-  "inLanguage": "ko-KR",
-  "isPartOf": {{ "@type": "WebSite", "name": "{BRAND}", "url": "{BASE_URL}/" }}
-}}
-</script>
-<script type="application/ld+json">
-{{
-  "@context": "https://schema.org",
-  "@type": "BreadcrumbList",
-  "itemListElement": [
-    {{ "@type": "ListItem", "position": 1, "name": "안성 출장마사지·홈타이", "item": "{BASE_URL}/" }}
-  ]
-}}
-</script>
-<script type="application/ld+json">
-{{
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  "name": "{BRAND}",
-  "url": "{BASE_URL}/",
-  "image": "{BASE_URL}/assets/og-image.png",
-  "telephone": "{PHONE}",
-  "description": "경기도 안성시 전지역 방문 출장마사지·홈타이 예약 안내",
-  "areaServed": {{ "@type": "AdministrativeArea", "name": "경기도 안성시" }},
-  "contactPoint": {{
-    "@type": "ContactPoint",
-    "telephone": "{PHONE}",
-    "contactType": "reservations",
-    "areaServed": "KR",
-    "availableLanguage": "Korean"
-  }}
-}}
-</script>
-<script type="application/ld+json">
-{{
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  "mainEntity": [
-    {{
-      "@type": "Question",
-      "name": "안성시 전지역 방문이 가능한가요?",
-      "acceptedAnswer": {{ "@type": "Answer", "text": "예약 시간, 정확한 위치, 배정 상황에 따라 가능 여부가 달라집니다. 공도읍, 안성동, 대덕면을 비롯한 읍·면·대표 동 기준으로 안내하며 외곽 면 지역은 차량 이동 시간과 추가 이동비 여부를 예약 시 함께 확인합니다." }}
-    }},
-    {{
-      "@type": "Question",
-      "name": "안성에는 지하철역이 없는데 어떻게 위치를 찾나요?",
-      "acceptedAnswer": {{ "@type": "Answer", "text": "안성시는 운영 중인 철도역 중심 도시가 아니라 읍·면·대표 동과 안성터미널, 공도 생활권, 아양지구, 안성IC 같은 실제 생활권·교통거점을 기준으로 안내합니다. 정확한 가능 여부는 예약 시 주소 기준으로 확인합니다." }}
-    }},
-    {{
-      "@type": "Question",
-      "name": "안성1·2·3동은 왜 따로 없나요?",
-      "acceptedAnswer": {{ "@type": "Answer", "text": "번호로 나뉜 행정동은 안성동 대표 페이지에서 통합 안내하여 중복 페이지 위험을 줄입니다. 본문에서 중앙로·석정동·아양지구 등 중심 생활권을 함께 설명합니다." }}
-    }},
-    {{
-      "@type": "Question",
-      "name": "외곽 면 지역도 방문 가능한가요?",
-      "acceptedAnswer": {{ "@type": "Answer", "text": "일죽면·죽산면 같은 외곽 면 지역도 위치에 따라 가능할 수 있습니다. 다만 중심부와 이동 시간이 다를 수 있어 방문 가능 시간과 추가 이동비를 예약 시 미리 안내해 드립니다." }}
-    }},
-    {{
-      "@type": "Question",
-      "name": "홈타이와 출장마사지는 무엇이 다른가요?",
-      "acceptedAnswer": {{ "@type": "Answer", "text": "출장마사지는 관리사가 자택·숙소·사무실로 방문하는 형태 전체를 가리키고, 홈타이는 그중 집에서 받는 타이마사지를 부르는 말입니다. 자세한 내용은 홈타이 이용 가이드에서 확인하세요." }}
-    }}
-  ]
-}}
-</script>
-"""
+# WebPage·BreadcrumbList·Organization·WebSite·FAQPage 등 구조화 데이터는
+# build.py 에서 본문(보이는 FAQ 등)을 근거로 모든 페이지에 일괄 생성한다.
+# 메인 페이지의 FAQPage 는 아래 본문의 .faq-item 들로부터 자동 추출된다.
+_JSONLD = ""
 
 _HERO = f"""<section class="hero">
   <div class="hero-inner">
@@ -115,19 +46,19 @@ _BODY = f"""
 <h2>읍·면·대표 동별 방문 가능 지역 안내</h2>
 <p>안성시는 행정구가 없으므로 안성시 → 읍·면·대표 동 → 생활권·교통거점 순서로 안내합니다. 공도읍과 11개 면, 그리고 안성1·2·3동을 통합한 <a href="/anseong/anseong-dong-chuljangmassage/">안성동</a>까지 13개 대표 지역으로 구성했습니다. 번호로 나뉜 안성1·2·3동을 각각 따로 만들면 지역명만 다르고 본문이 비슷해질 수 있어 안성동 한 페이지로 통합하고, 본문 안에서 중앙로·석정동·아양지구 등 중심 생활권을 설명합니다. 거주하시거나 머무시는 지역을 선택해 주세요.</p>
 <ul class="card-grid">
-<li><a href="/anseong/gongdo-eup-chuljangmassage/">공도읍</a></li>
-<li><a href="/anseong/bogae-myeon-chuljangmassage/">보개면</a></li>
-<li><a href="/anseong/geumgwang-myeon-chuljangmassage/">금광면</a></li>
-<li><a href="/anseong/seoun-myeon-chuljangmassage/">서운면</a></li>
-<li><a href="/anseong/miyang-myeon-chuljangmassage/">미양면</a></li>
-<li><a href="/anseong/daedeok-myeon-chuljangmassage/">대덕면</a></li>
-<li><a href="/anseong/yangseong-myeon-chuljangmassage/">양성면</a></li>
-<li><a href="/anseong/wongok-myeon-chuljangmassage/">원곡면</a></li>
-<li><a href="/anseong/iljuk-myeon-chuljangmassage/">일죽면</a></li>
-<li><a href="/anseong/juksan-myeon-chuljangmassage/">죽산면</a></li>
-<li><a href="/anseong/samjuk-myeon-chuljangmassage/">삼죽면</a></li>
-<li><a href="/anseong/gosam-myeon-chuljangmassage/">고삼면</a></li>
-<li><a href="/anseong/anseong-dong-chuljangmassage/">안성동</a></li>
+<li><a href="/anseong/gongdo-eup-chuljangmassage/">공도읍 출장마사지</a></li>
+<li><a href="/anseong/bogae-myeon-chuljangmassage/">보개면 출장마사지</a></li>
+<li><a href="/anseong/geumgwang-myeon-chuljangmassage/">금광면 출장마사지</a></li>
+<li><a href="/anseong/seoun-myeon-chuljangmassage/">서운면 출장마사지</a></li>
+<li><a href="/anseong/miyang-myeon-chuljangmassage/">미양면 출장마사지</a></li>
+<li><a href="/anseong/daedeok-myeon-chuljangmassage/">대덕면 출장마사지</a></li>
+<li><a href="/anseong/yangseong-myeon-chuljangmassage/">양성면 출장마사지</a></li>
+<li><a href="/anseong/wongok-myeon-chuljangmassage/">원곡면 출장마사지</a></li>
+<li><a href="/anseong/iljuk-myeon-chuljangmassage/">일죽면 출장마사지</a></li>
+<li><a href="/anseong/juksan-myeon-chuljangmassage/">죽산면 출장마사지</a></li>
+<li><a href="/anseong/samjuk-myeon-chuljangmassage/">삼죽면 출장마사지</a></li>
+<li><a href="/anseong/gosam-myeon-chuljangmassage/">고삼면 출장마사지</a></li>
+<li><a href="/anseong/anseong-dong-chuljangmassage/">안성동 출장마사지</a></li>
 </ul>
 </section>
 
@@ -135,15 +66,15 @@ _BODY = f"""
 <h2>안성터미널·공도·아양지구 생활권 안내</h2>
 <p>역이 아닌 실제 이동 기준으로 위치를 설명하는 것이 편하시다면 생활권·교통거점 안내를 참고하세요. <a href="/anseong/anseong-terminal-chuljangmassage/">안성터미널</a>은 안성동 중심 생활권의 거점이고, <a href="/anseong/gongdo-area-chuljangmassage/">공도 생활권</a>은 평택과 가까운 안성 서부 주거·상업권, <a href="/anseong/ayang-area-chuljangmassage/">아양지구</a>는 신주거지와 상업시설이 함께 있는 안성 신도심입니다. 안성IC·서안성IC·일죽IC 인근은 차량 이동 기준이 분명한 거점으로, 외곽 이동 동선을 설명하는 데 활용합니다.</p>
 <ul class="card-grid">
-<li><a href="/anseong/anseong-terminal-chuljangmassage/">안성터미널</a></li>
-<li><a href="/anseong/gongdo-area-chuljangmassage/">공도 생활권</a></li>
-<li><a href="/anseong/ayang-area-chuljangmassage/">아양지구</a></li>
-<li><a href="/anseong/seokjeong-dong-area-chuljangmassage/">석정동 생활권</a></li>
-<li><a href="/anseong/chungang-univ-area-chuljangmassage/">중앙대 안성캠퍼스 인근</a></li>
-<li><a href="/anseong/hankyong-univ-area-chuljangmassage/">한경국립대 인근</a></li>
-<li><a href="/anseong/anseong-ic-chuljangmassage/">안성IC 인근</a></li>
-<li><a href="/anseong/west-anseong-ic-chuljangmassage/">서안성IC 인근</a></li>
-<li><a href="/anseong/iljuk-ic-chuljangmassage/">일죽IC 인근</a></li>
+<li><a href="/anseong/anseong-terminal-chuljangmassage/">안성터미널 홈타이</a></li>
+<li><a href="/anseong/gongdo-area-chuljangmassage/">공도 생활권 홈타이</a></li>
+<li><a href="/anseong/ayang-area-chuljangmassage/">아양지구 홈타이</a></li>
+<li><a href="/anseong/seokjeong-dong-area-chuljangmassage/">석정동 생활권 홈타이</a></li>
+<li><a href="/anseong/chungang-univ-area-chuljangmassage/">중앙대 안성캠퍼스 홈타이</a></li>
+<li><a href="/anseong/hankyong-univ-area-chuljangmassage/">한경국립대 인근 홈타이</a></li>
+<li><a href="/anseong/anseong-ic-chuljangmassage/">안성IC 인근 홈타이</a></li>
+<li><a href="/anseong/west-anseong-ic-chuljangmassage/">서안성IC 인근 홈타이</a></li>
+<li><a href="/anseong/iljuk-ic-chuljangmassage/">일죽IC 인근 홈타이</a></li>
 </ul>
 </section>
 
@@ -160,6 +91,23 @@ _BODY = f"""
 <section id="guide">
 <h2>안성 출장마사지 사이트 이용 가이드</h2>
 <p>이 사이트는 메인 페이지가 안성시 전체 안내를 맡고, 읍·면·대표 동 페이지가 세부 지역 안내를, 생활권·교통거점 페이지가 실제 이동 기준이 있는 검색 의도를 각각 담당하도록 구성했습니다. 본인에게 익숙한 기준이 동·면이라면 읍·면·대표 동 페이지를, 터미널이나 IC·대학이라면 생활권·교통거점 페이지를 보시면 되며 예약 절차와 이용 기준은 어느 쪽이든 동일합니다. 모든 안내는 과장 없이 방문 가능 지역, 예약 절차, 취소 기준, 개인정보 처리 기준을 분명히 보여 드리는 것을 원칙으로 하며, 불법적이거나 무리한 요청은 어떤 경우에도 진행하지 않습니다.</p>
+</section>
+
+<section id="topics">
+<h2>상황별·주제별 빠른 안내</h2>
+<p>찾으시는 상황에 맞춰 바로 이동하실 수 있도록 자주 찾는 주제를 모았습니다. 어느 경로로 들어오셔도 예약 절차와 이용 기준은 동일합니다.</p>
+<ul class="topic-grid">
+<li><a href="/anseong/anseong-dong-chuljangmassage/">안성동 24시간 출장마사지 예약</a></li>
+<li><a href="/anseong/gongdo-eup-chuljangmassage/">공도읍 아파트 방문 홈타이</a></li>
+<li><a href="/anseong/ayang-area-chuljangmassage/">아양지구 신축 단지 출장마사지</a></li>
+<li><a href="/anseong/chungang-univ-area-chuljangmassage/">중앙대 안성캠퍼스 원룸 출장마사지</a></li>
+<li><a href="/anseong/hankyong-univ-area-chuljangmassage/">한경국립대 인근 자취방 홈타이</a></li>
+<li><a href="/anseong/anseong-terminal-chuljangmassage/">안성터미널 인근 숙소 출장마사지</a></li>
+<li><a href="/anseong/iljuk-myeon-chuljangmassage/">일죽면 외곽 심야 방문 마사지</a></li>
+<li><a href="/anseong/juksan-myeon-chuljangmassage/">죽산면 전원주택 출장마사지</a></li>
+<li><a href="/hometai/">처음 받는 홈타이 이용 가이드</a></li>
+<li><a href="/reservation/">당일 예약 절차와 이동비 안내</a></li>
+</ul>
 </section>
 
 <section id="faq">

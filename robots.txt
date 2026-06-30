@@ -13,5 +13,5 @@ Allow: /
 User-agent: *
 Allow: /
 
-Sitemap: https://anseong-massage.pages.dev/sitemap.xml
-Sitemap: https://anseong-massage.pages.dev/rss.xml
+Sitemap: https://anseong-massage.netlify.app/sitemap.xml
+Sitemap: https://anseong-massage.netlify.app/rss.xml

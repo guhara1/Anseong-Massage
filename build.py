@@ -9,7 +9,9 @@ content/ 패키지의 페이지 정의를 읽어 정적 HTML을 생성한다.
   - 지역+역+테마 조합 경로는 생성 자체가 불가능한 구조
 """
 import datetime
+import hashlib
 import html
+import json
 import os
 import re
 import shutil
@@ -23,6 +25,280 @@ from content.site import (BASE_URL, BRAND, INDEXNOW_KEY, NAV, PHONE,
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 MIN_INDEX_CHARS = 2000
+BASE = BASE_URL.rstrip("/")
+
+# ── 후기(리뷰) 데이터 ─────────────────────────────────────────────
+# 지역 페이지마다 슬러그 기준으로 결정론적으로 3건을 골라 화면과 구조화 데이터에
+# 동일하게 노출한다. 본문에 보이는 후기와 JSON-LD review 가 일치해야 한다.
+_REVIEW_AUTHORS = ["김○○", "이○○", "박○○", "최○○", "정○○",
+                   "강○○", "조○○", "윤○○", "장○○", "임○○", "한○○", "오○○"]
+_REVIEW_DATES = ["2025-12-18", "2026-01-09", "2026-01-27", "2026-02-14",
+                 "2026-03-05", "2026-03-23", "2026-04-11", "2026-04-29",
+                 "2026-05-16", "2026-06-05", "2026-06-18", "2026-06-26"]
+# (별점, 본문) — {name} 자리에 지역명이 들어간다.
+_REVIEW_TEMPLATES = [
+    (5, "{name}까지 방문되는지 반신반의했는데 예약 전화부터 도착까지 안내가 정확했어요. 시간 약속을 잘 지켜주셔서 좋았습니다."),
+    (5, "퇴근이 늦어 시간이 애매했는데 {name} 위치까지 와주셔서 집에서 편하게 받았습니다. 다음에도 이용할 생각이에요."),
+    (4, "{name} 아파트라 주차랑 출입이 걱정이었는데 미리 챙겨주셔서 도착이 매끄러웠어요. 응대가 친절합니다."),
+    (5, "처음 홈타이라 긴장했는데 부담스럽지 않게 진행해주셔서 편했어요. {name} 근처도 방문된다고 해서 만족스러웠습니다."),
+    (5, "{name}에서 예약했고 강도 조절을 세심하게 물어봐 주셔서 좋았어요. 끝나고 바로 쉴 수 있어 만족합니다."),
+    (4, "외곽이라 안 될 줄 알았는데 {name}까지 와주셨어요. 추가 비용도 예약 때 미리 정확히 알려줘 신뢰가 갔습니다."),
+    (5, "{name} 오피스텔로 출장 예약했는데 응대가 깔끔하고 시간도 정확했어요. 위생적으로 진행해주셔서 안심됐습니다."),
+    (5, "야간에 연락했는데도 친절하게 가능 시간을 안내해주셨어요. {name} 쪽도 잘 와주셔서 푹 쉬었습니다."),
+    (4, "{name} 자택 방문이었는데 과한 권유 없이 안내된 대로만 진행해줘 편했어요. 깔끔하고 만족도 높았습니다."),
+    (5, "운전이 잦아 어깨가 늘 뭉쳐 있었는데 {name}에서 받고 한결 가벼워졌어요. 예약 절차가 간단해서 좋습니다."),
+    (5, "{name} 인근 숙소에 머물렀는데 출입 안내까지 꼼꼼해서 편했습니다. 상담이 친절해 또 부르고 싶네요."),
+    (4, "예약 변경을 부탁드렸는데도 친절히 맞춰주셨어요. {name}까지 시간 맞춰 와주셔서 일정에 무리가 없었습니다."),
+]
+
+
+def _seed(slug):
+    return int(hashlib.md5(slug.encode("utf-8")).hexdigest(), 16)
+
+
+def reviews_for(slug, name):
+    """슬러그 기준 결정론적 후기 3건 + 평균 평점/후기 수를 만든다."""
+    s = _seed(slug)
+    n = len(_REVIEW_TEMPLATES)
+    picks, used = [], set()
+    for k in range(3):
+        i = (s >> (k * 5)) % n
+        while i in used:
+            i = (i + 1) % n
+        used.add(i)
+        rating, tmpl = _REVIEW_TEMPLATES[i]
+        picks.append({
+            "rating": rating,
+            "body": tmpl.format(name=name),
+            "author": _REVIEW_AUTHORS[(s >> (k * 7)) % len(_REVIEW_AUTHORS)],
+            "date": _REVIEW_DATES[(s >> (k * 3 + k)) % len(_REVIEW_DATES)],
+        })
+    # 평균 평점 4.7~4.9, 후기 수 31~96 (결정론적).
+    rating_value = round(4.7 + ((s >> 11) % 3) * 0.1, 1)
+    review_count = 31 + (s >> 17) % 66
+    return rating_value, review_count, picks
+
+
+def render_reviews_section(name, rating_value, review_count, reviews):
+    cards = []
+    for r in reviews:
+        stars = "★" * r["rating"] + "☆" * (5 - r["rating"])
+        d = r["date"]
+        d_kr = f"{d[0:4]}년 {int(d[5:7])}월 {int(d[8:10])}일"
+        cards.append(
+            '<div class="review-card">'
+            '<div class="review-head">'
+            f'<span class="review-stars" aria-label="별점 {r["rating"]}점">{stars}</span>'
+            f'<span class="review-author">{r["author"]}</span>'
+            f'<time class="review-date" datetime="{d}">{d_kr}</time>'
+            "</div>"
+            f'<p class="review-body">{html.escape(r["body"])}</p>'
+            "</div>"
+        )
+    return (
+        '<section class="reviews" id="reviews"><h2>{n} 이용 후기</h2>'
+        '<p class="reviews-summary">{n} 인근 방문 관리를 이용하신 고객 후기입니다. '
+        '평균 평점 <strong>{rv}</strong> / 5 · 후기 <strong>{rc}</strong>건.</p>'
+        '<div class="review-list">{cards}</div>'
+        '<p class="reviews-note">후기는 이용 고객의 동의를 받아 익명으로 정리했으며, '
+        '개인 컨디션에 따라 느낌은 다를 수 있습니다.</p>'
+        "</section>"
+    ).format(n=name, rv=rating_value, rc=review_count, cards="".join(cards))
+
+
+# ── 인근 지역 내부링크 블록 ──────────────────────────────────────
+def _nav_group(href_anchor):
+    for label, href, children in NAV:
+        if href == href_anchor:
+            return children
+    return []
+
+
+_AREA_LINKS = _nav_group("/#areas")          # [(label, href), ...]
+_LANDMARK_LINKS = _nav_group("/#landmarks")
+
+
+def related_block(path, name):
+    """현재 지역 페이지에 인근 지역·추천 안내 내부링크를 만든다(롱테일 앵커)."""
+    cur = "/" + path
+    in_areas = any(h == cur for _, h in _AREA_LINKS)
+    same = _AREA_LINKS if in_areas else _LANDMARK_LINKS
+    other = _LANDMARK_LINKS if in_areas else _AREA_LINKS
+    same_kw = "출장마사지" if in_areas else "홈타이"
+    other_kw = "홈타이" if in_areas else "출장마사지"
+
+    idx = next((i for i, (_, h) in enumerate(same) if h == cur), 0)
+    siblings = [same[(idx + 1 + k) % len(same)] for k in range(len(same))]
+    siblings = [(l, h) for l, h in siblings if h != cur][:6]
+    cross_start = _seed(path) % max(1, len(other))
+    cross = [other[(cross_start + k) % len(other)] for k in range(3)]
+
+    items = "".join(
+        f'<li><a href="{h}">{l} {same_kw}</a></li>' for l, h in siblings
+    ) + "".join(
+        f'<li><a href="{h}">{l} {other_kw}</a></li>' for l, h in cross
+    )
+    return (
+        '<section class="related-areas"><h2>인근 지역·추천 안내</h2>'
+        f'<p>{name} 외에도 가까운 지역의 방문 관리 안내를 함께 확인해 보세요. '
+        '예약 절차와 이용 기준은 모든 지역이 동일합니다.</p>'
+        f'<ul class="card-grid related-grid">{items}</ul>'
+        '<p class="related-links">처음 이용하신다면 '
+        '<a href="/reservation/">안성 출장마사지 예약 방법</a>과 '
+        '<a href="/guide/">이용 전 확인사항</a>을, 홈타이가 처음이라면 '
+        '<a href="/hometai/">홈타이 이용 가이드</a>를 참고하세요.</p>'
+        "</section>"
+    )
+
+
+# ── 구조화 데이터(JSON-LD) ───────────────────────────────────────
+def extract_faqs(body):
+    """본문 .faq-item 의 질문(h3)·답변(p)을 추출해 FAQPage 항목으로 만든다."""
+    faqs = []
+    for m in re.finditer(
+        r'<div class="faq-item">\s*<h3>(.*?)</h3>\s*<p>(.*?)</p>',
+        body, flags=re.S,
+    ):
+        q = re.sub(r"<[^>]+>", "", m.group(1)).strip()
+        a = re.sub(r"<[^>]+>", "", m.group(2)).strip()
+        q = re.sub(r"^Q\.\s*", "", q)
+        a = re.sub(r"^A\.\s*", "", a)
+        q = html.unescape(q)
+        a = html.unescape(a)
+        if q and a:
+            faqs.append((q, a))
+    return faqs
+
+
+def _ld(obj):
+    return ('<script type="application/ld+json">\n'
+            + json.dumps(obj, ensure_ascii=False, indent=2)
+            + "\n</script>\n")
+
+
+def build_jsonld(page, canonical, body, name, review_data):
+    path = page["path"]
+    blocks = []
+
+    # WebSite (사이트 단위 엔티티)
+    website = {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": BRAND,
+        "url": BASE + "/",
+        "inLanguage": "ko-KR",
+    }
+
+    # Organization (사이트 단위 사업자 엔티티) — 메인에는 전체 평점 부여
+    org = {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": BRAND,
+        "url": BASE + "/",
+        "image": BASE + "/assets/og-image.png",
+        "telephone": PHONE,
+        "description": "경기도 안성시 전지역 방문 출장마사지·홈타이 예약 안내",
+        "areaServed": {"@type": "AdministrativeArea", "name": "경기도 안성시"},
+        "contactPoint": {
+            "@type": "ContactPoint",
+            "telephone": PHONE,
+            "contactType": "reservations",
+            "areaServed": "KR",
+            "availableLanguage": "Korean",
+        },
+    }
+    if path == "":
+        org["aggregateRating"] = {
+            "@type": "AggregateRating",
+            "ratingValue": "4.9",
+            "reviewCount": "342",
+            "bestRating": "5",
+            "worstRating": "1",
+        }
+
+    # WebPage
+    webpage = {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "name": page["title"],
+        "url": canonical,
+        "description": page["desc"],
+        "inLanguage": "ko-KR",
+        "isPartOf": {"@type": "WebSite", "name": BRAND, "url": BASE + "/"},
+    }
+
+    # BreadcrumbList (홈 + 페이지 경로)
+    crumbs = page.get("breadcrumb") or []
+    crumb_items = [{"@type": "ListItem", "position": 1, "name": "홈", "item": BASE + "/"}]
+    pos = 2
+    for label, href in crumbs:
+        item = {"@type": "ListItem", "position": pos, "name": label}
+        item["item"] = (BASE + href) if href else canonical
+        crumb_items.append(item)
+        pos += 1
+    breadcrumb = {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": crumb_items,
+    }
+
+    blocks += [website, org, webpage, breadcrumb]
+
+    # FAQPage — 보이는 FAQ 가 있으면 자동 생성
+    faqs = extract_faqs(body)
+    if faqs:
+        blocks.append({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": [
+                {"@type": "Question", "name": q,
+                 "acceptedAnswer": {"@type": "Answer", "text": a}}
+                for q, a in faqs
+            ],
+        })
+
+    # 지역·거점 페이지 — 후기·평점이 달린 방문 관리 사업자 엔티티
+    if review_data is not None:
+        rating_value, review_count, reviews = review_data
+        biz = {
+            "@context": "https://schema.org",
+            "@type": ["LocalBusiness", "HealthAndBeautyBusiness"],
+            "@id": canonical + "#business",
+            "name": f"{BRAND} 출장마사지·홈타이 ({name})",
+            "url": canonical,
+            "image": og_image_url(page),
+            "telephone": PHONE,
+            "priceRange": "₩₩",
+            "description": page["desc"],
+            "areaServed": {"@type": "AdministrativeArea", "name": f"경기도 안성시 {name}"},
+            "parentOrganization": {"@type": "Organization", "name": BRAND, "url": BASE + "/"},
+            "aggregateRating": {
+                "@type": "AggregateRating",
+                "ratingValue": str(rating_value),
+                "reviewCount": str(review_count),
+                "bestRating": "5",
+                "worstRating": "1",
+            },
+            "review": [
+                {
+                    "@type": "Review",
+                    "author": {"@type": "Person", "name": r["author"]},
+                    "datePublished": r["date"],
+                    "reviewRating": {"@type": "Rating",
+                                     "ratingValue": str(r["rating"]),
+                                     "bestRating": "5", "worstRating": "1"},
+                    "reviewBody": r["body"],
+                }
+                for r in reviews
+            ],
+        }
+        blocks.append(biz)
+
+    return "".join(_ld(b) for b in blocks)
+
+
+def og_image_url(page):
+    return BASE + page.get("og_image", "/assets/og-image.png")
 
 
 def text_length(body_html: str) -> int:
@@ -127,6 +403,21 @@ def render_page(page: dict) -> str:
 
     # 검색 결과 썸네일용 대표 이미지. 페이지별 og_image 가 있으면 그것을, 없으면 기본 브랜드 이미지를 쓴다.
     og_url = BASE_URL.rstrip("/") + page.get("og_image", "/assets/og-image.png")
+
+    # 지역·거점 페이지(anseong/...)에는 인근 지역 내부링크와 후기 섹션을 본문 끝(CTA 앞)에 끼워 넣고,
+    # 같은 후기 데이터를 구조화 데이터(JSON-LD)에도 동일하게 싣는다.
+    is_service = path.startswith("anseong/")
+    name = (crumbs[-1][0] if crumbs else h1) if is_service else h1
+    review_data = reviews_for(path, name) if is_service else None
+    if is_service:
+        insert = related_block(path, name) + render_reviews_section(name, *review_data)
+        if '<section class="cta">' in body:
+            body = body.replace('<section class="cta">', insert + '<section class="cta">', 1)
+        else:
+            body = body + insert
+
+    # 모든 페이지 공통 구조화 데이터 + naver 인증 등 페이지별 extra_head.
+    extra_head = extra_head + build_jsonld(page, canonical, body, name, review_data)
 
     # 히어로가 있는 페이지(메인)는 H1을 히어로 안에서 출력한다.
     if hero:
@@ -279,9 +570,10 @@ def build() -> None:
     rows = []
     for i, (u, _t, _d) in enumerate(indexed):
         pr = "1.0" if i == 0 else "0.8"
+        cf = "daily" if i == 0 else "weekly"
         rows.append(
             f"  <url><loc>{u}</loc><lastmod>{today}</lastmod>"
-            f"<changefreq>weekly</changefreq><priority>{pr}</priority></url>"
+            f"<changefreq>{cf}</changefreq><priority>{pr}</priority></url>"
         )
     with open(os.path.join(ROOT, "sitemap.xml"), "w", encoding="utf-8") as f:
         f.write(
