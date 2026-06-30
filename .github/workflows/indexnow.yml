@@ -1,12 +1,12 @@
 name: 색인 즉시 통보 (IndexNow + Google)
 
-# 글을 올리거나 콘텐츠가 바뀌어 main(운영 배포 브랜치)에 푸시되면
+# 글을 올리거나 콘텐츠가 바뀌어 운영 배포 브랜치에 푸시되면
 # 빙·네이버(IndexNow)와 구글(Indexing API, 선택)에 즉시 색인을 통보한다.
-# 운영 배포 브랜치가 main이 아니면 아래 branches 값을 바꾸세요.
+# 운영 배포 브랜치(현재 claude/happy-albattani-ut2qqb)와 main 모두 감시한다.
 
 on:
   push:
-    branches: [main]
+    branches: [claude/happy-albattani-ut2qqb, main]
     paths:
       - "content/**"
       - "build.py"
