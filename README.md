@@ -85,7 +85,7 @@ python3 build.py
 
 ## 색인 (검색엔진 즉시 등록)
 
-빌드 시 다음 색인 자산이 함께 생성됩니다 (배포 도메인: `https://anseong-massage.pages.dev`).
+빌드 시 다음 색인 자산이 함께 생성됩니다 (배포 도메인: `https://anseong-massage.netlify.app`).
 
 | 파일 | 용도 |
 |------|------|
@@ -128,7 +128,7 @@ python3 scripts/google_index.py             # 또는 변경 URL만 인자로
 
 ## 배포 전 해야 할 일
 
-1. `content/site.py`의 `BASE_URL` 확인 (현재 `https://anseong-massage.pages.dev`)
+1. `content/site.py`의 `BASE_URL` 확인 (현재 `https://anseong-massage.netlify.app`)
 2. `python3 build.py` 재실행 (canonical·sitemap·rss·robots·IndexNow 키에 반영됨)
 3. Google Search Console / 네이버 서치어드바이저 / 빙에 `sitemap.xml` 제출
 4. 새 글/수정 시 `scripts/indexnow.py`(+선택 `scripts/google_index.py`) 실행, 또는 자동화 워크플로 사용
